@@ -53,7 +53,11 @@ class GN():
         self.sideConnection = 0
 
         print('     Loading the model...')
+        
+        # 加载外观模型pth
         self.loadAModel()
+        
+        # 加载运动模型pth
         self.loadMModel()
 
         self.out_dir = t_dir + 'motmetrics_%s/' % (type)
@@ -68,6 +72,7 @@ class GN():
 
     def initOut(self):
         print('     Loading Data...')
+        # 定义两个数据容器，分别用于获取外观属性和运动属性
         self.a_train_set = ADatasetFromFolder(sequence_dir, mot_dataset_dir + 'MOT16/test/MOT16-%02d' % self.seq_index,
                                               tau_conf_score)
         self.m_train_set = MDatasetFromFolder(sequence_dir, mot_dataset_dir + 'MOT16/test/MOT16-%02d' % self.seq_index,
@@ -79,6 +84,7 @@ class GN():
         self.createTxt(res_training)
         self.copyLines(self.seq_index, 1, detection_dir, self.seq_len, 1)
 
+        # 开始评估
         self.evaluation(1, self.seq_len, detection_dir, res_training)
 
     def getSeqL(self, info):
@@ -142,7 +148,7 @@ class GN():
         tail = 13
         self.MUphi = torch.load('../Motion1/' + model_dir + 'uphi_%d.pth' % tail).to(self.device)
         self.MEphi = torch.load('../Motion1/' + model_dir + 'ephi_%d.pth' % tail).to(self.device)
-        self.Mu = torch.load('../Motion1/' + model_dir + 'u_%d.pth' % tail).to(self.device)
+        self.Mu = torch.load('../Motion1/' + model_dir + 'u_%d.pth' % tail).to(self.device) # GN的global variable
 
     def swapFC(self):
         self.cur = self.cur ^ self.nxt
@@ -210,7 +216,7 @@ class GN():
 
         while a_step < tail:
             # print '*********************************'
-            a_t_gap = self.a_train_set.loadNext()
+            a_t_gap = self.a_train_set.loadNext() # 获取检测box的对应
             m_t_gap = self.m_train_set.loadNext()
             if a_t_gap != m_t_gap:
                 print('Something is wrong!')
@@ -222,6 +228,7 @@ class GN():
             if a_step % 100 == 0:
                 print('')
 
+            # 调用第一个模型：MUphi
             m_u_ = self.MUphi(self.m_train_set.E, self.m_train_set.V, self.Mu)
 
             # print 'Fo'
