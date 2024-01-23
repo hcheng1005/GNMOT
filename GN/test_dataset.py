@@ -27,8 +27,10 @@ class ADatasetFromFolder(data.Dataset):
         self.tau_conf_score = tau
         self.show = show
 
-        self.loadAModel()
-        self.getSeqL()
+        self.loadAModel() # 加载模型
+        self.getSeqL() # 获取数据集序列
+        
+        # 根据任务不同，获取不同的box数据
         if test_gt_det:
             self.readBBx_gt()
         else:
@@ -115,7 +117,7 @@ class ADatasetFromFolder(data.Dataset):
         self.cur = 0  # the index of current frame in the detections
         self.nxt = 1  # the index of next frame in the detections
         self.detections = [None, None]  # the buffer to storing images: current & next frame
-        self.feature(1)
+        self.feature(1) # 调用resnet网络进行特征提取
 
     def setBuffer(self, f):
         self.m = 0
@@ -177,6 +179,14 @@ class ADatasetFromFolder(data.Dataset):
             ratio = Area * 1. / (Area1 + Area2 - Area)
         return ratio
 
+    '''
+    name: getMN
+    description: 获取本周期gt和检测的iou关系map
+    param {*} self
+    param {*} m
+    param {*} n
+    return {*}
+    '''
     def getMN(self, m, n):
         ans = [[None for i in range(n)] for i in range(m)]
         for i in range(m):
@@ -272,7 +282,7 @@ class ADatasetFromFolder(data.Dataset):
                     bbx_container.append([x, y, w, h, conf_score])
                 crop = img.crop([x, y, x + w, y + h])
                 bbx = crop.resize((224, 224), Image.ANTIALIAS)
-                ret = self.resnet34(bbx)
+                ret = self.resnet34(bbx) # 特征提取器
                 app = ret.data
                 apps.append([app, conf_score])
 
@@ -301,19 +311,19 @@ class ADatasetFromFolder(data.Dataset):
 
         self.gap = 0
         self.n = 0
-        while self.n == 0:
+        while self.n == 0: # TBD 这里会死循环的吧？？
             self.f_step += 1
             self.feature()
             self.n = len(self.detections[self.nxt])
             self.gap += 1
 
-        if self.gap > 1:
-            print('           Empty in loadNext:', self.f_step - self.gap + 1, '-', self.gap - 1)
+        # if self.gap > 1:
+        #     print('Empty in loadNext:', self.f_step - self.gap + 1, '-', self.gap - 1)
 
         self.candidates = []
         self.edges = self.getMN(self.m, self.n)
 
-        for i in range(self.m):
+        for i in range(self.m): 
             for j in range(self.n):
                 e = self.edges[i][j]
                 self.candidates.append([e, i, j])

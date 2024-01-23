@@ -7,6 +7,11 @@ u_num = 100
 e_num = 1 if criterion_s else 2
 
 
+'''
+name: appearance
+description: 基于resnet34的特征提取网络，用于后续外观相似度比较
+return {*}
+'''
 class appearance(nn.Module):
     def __init__(self):
         super(appearance, self).__init__()
